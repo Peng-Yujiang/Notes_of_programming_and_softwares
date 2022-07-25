@@ -58,6 +58,11 @@ ctrl+] //推出IDF监视器
 idf.py create-project
 ```
 
+## **LVGL**
+**1. 注意事项**
+- 先配置选项Kconfig
+- lv_conf.h
+
 ## **FreeRTOS**
 **1. 核心功能**
 内核管理 --任务管理--任务控制块
