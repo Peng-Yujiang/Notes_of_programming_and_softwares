@@ -854,7 +854,9 @@ sizeof expr;    // 并没有计算过expr的值
 6. 命名的强制类型转换
     ```c++
     cast-name<type>(expression)
+
     dynamic_cast    // 运行时识别指针或引用所指向的对象
+    
     const_cast      // 转换掉表达式的const性质
     /* 修改，使其接受const char* 类型的参数 */
     const char *pc_str;
