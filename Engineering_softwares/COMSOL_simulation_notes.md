@@ -5,7 +5,7 @@
     >惯性力 粘滞力  弹性力  载荷
 
 ### 2. 分类
-![本地路径](-comsol_pics\categories_of_structural_mechanics.png "结构动力学的分类")
+- ![本地路径](comsol_pics\categories_of_structural_mechanics.png "结构动力学的分类")
 
 ### 3. 研究类型
 - 涉及到的频域计算均为线性扰动，即简谐振动
@@ -138,5 +138,48 @@ $$\tilde{u} = u_r + iu_i $$
     - 非流致噪声
     - 包含不同程度细节的对流声学
 ### 2. Navier-Stokes方程
-![本地路径](comsol_pics\navier-stokes_equation.png)
+- ![本地路径](comsol_pics\navier-stokes_equation.png)
 
+### 3. 压力，温度，和速度
+- 声波是$\color{red}微小$声学扰动下的压缩波
+- 声压变化$p$，温度$T$，速度场$u$, 和密度$\rho$
+![相对路径](comsol_pics\pressure,temperature,and_velocity.png)
+这是所有线性声学的第一阶段，然后再考虑控制方程
+
+### 4. COMSOL中的声学模型
+- ![本地路径](comsol_pics\acoustic_model.png)
+
+### 5. 线性Navier-Stokes
+- 流动和声学相互作用
+    - 一般认为声场不影响流动，流动会影响声场
+- 应用
+    - 内部流场（流动管道）
+    - 排气系统
+    - 穿孔板和内衬层
+    - 频域下的流固耦合FSI（包含背景流）
+    - 燃烧不稳定性
+- 以$(p, u, T)$表示且包含背景流场$(p_0, u_0, T_0)$的最详细“对流声学”
+- 包括
+    - 解析粘性与热边界层
+    - 模拟湍流导致的衰减：耦合湍流粘度
+    - 反应项导致的剪切、熵变和声（压力波）的相互作用
+    - 频域下的流固耦合（FSI）
+    - 对流梯度导致的相互作用
+- 控制方程
+![本地路径](comsol_pics\governing_equation.png)
+
+### 6. 频域下的流固耦合（FSI）
+- 重要应用领域
+- 有流稳态系统下的线性响应
+- 降低计算成本
+    - 稳态CFD
+    - 频域LNS
+- 在COMSOL中预置了与结构的多物理场耦合
+
+### 7. CFD和声学间的网格映射
+- 将CFD的背景流场解映射到声学网格上是个非常重要的步骤
+    - 不同网格
+    - 不同集散阶次
+    - 添加与网格相关的平滑过渡
+- 反应项如$(v \cdot \delta )u_0$等会给声学解引入较大误差和噪音
+- 可参考帮助文档和教学模型
