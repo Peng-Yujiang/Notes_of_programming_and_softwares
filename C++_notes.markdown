@@ -228,7 +228,7 @@
 - `bitset`提供了一种抽象方法来操作位的集合。
 
 ### 3.1 命名空间的`using`声明
-- 使用**`using`声明**可以在不需要加前缀`namespace_name::`的情况下访问命名空间中的名字
+- 使用**using声明**可以在不需要加前缀`namespace_name::`的情况下访问命名空间中的名字
 ```c++
 #include <iostream>
 using namespace::name;  // using声明的形式
@@ -1273,10 +1273,414 @@ return expression;
         - 如果没有一个类显式定义任何构造函数，编译器将自动为这个类生成默认构造函数
 
 ### 7.8 重载函数
+- 相同作用域中的两个函数，如果具有相同的名字而形参表不同，则被称为***重载函数***
+- 函数不能仅仅基于不同的返回类型而实现重载
+1. 重载与作用域
+2. 函数匹配与实参转换
+    - 首先是最佳匹配，不然就进行隐式转换，实在没有则报错
+3. 重载确定的三个步骤
+    1. 候选函数
+    2. 选择可行函数
+    3. 寻找最佳匹配（如果有的话）
+    4. 含有多个形参的重载确定
+        - 如果调用有二义性，比如有两个参数，两个重名函数分别匹配其中一个参数类型
+        - 可通过显式的强制类型转换强制函数匹配
+        ```c++
+        f (static_cast<double>(43), 2.56); // calls f(double, double))
+        f (43, static_cast<int>(2.56)); // calls f(int, int)
+4. 实参类型转换
+- 转换等级
+    - 精准匹配。实参与形参类型相同
+    - 通过类型提升实现的匹配
+    - 通过标准转换实现的匹配
+    - 通过类类型实现的匹配
+    1. 需要类型提升或转换的匹配
+        - int型版本优于short型版本的较佳匹配
+        - 通过类型提升实现的转换优于其它标准转换
+    2. 参数匹配和枚举类型
+        - 无法将整型值传递给枚举类型的实参，但可以将枚举值传递给整型形参
+    3. 重载和const形参
+        - 可基于函数的引用形参是指向const对象还是指向非const对象，实现函数重载。
 
 ### 7.9 指向函数的指针
 ```c++
 bool (*pf) (const string &, const string &);    // 将pf声明为指向函数的指针
 ```
+1. 用typedef简化函数指针的定义
+    ```c++
+    typedef bool (*cmpFcn) (const string &, const string &);
+    // 指向返回bool类型并带有两个const string引用形参的函数的指针
+    // 在要使用这种函数指针类型时，只需直接使用cmpFcn即可
+    ```
+2. 指向函数的指针的初始化和赋值
+    - 在引用函数名但又没有调用该函数时，函数名将被自动解释为指向函数的指针
+    ```c++
+    bool lengthCompare(const string &, const string &);
+    // 对lengthCompare的任何使用都被解释为如下类型的函数：
+    bool (*) (const string &, const string &);
+    // 可使用函数名对函数指针做初始化赋值
+    cmpFcn pf1 = 0; // ok: unbound pointer to function
+    cmpFcn pf2 = lengthCompare; // ok: pointer type matches funciton's type
+    pf1 = lengthCompare;    // ok: pointer tpe matches function's type
+    pf2 = pf1;  // ok: pointer types match
+    // 直接引用函数名等效于在函数名上应用区地址操作符
+    cmpFcn pf1 = lengthCompare;
+    cmpFcn pf1 = &lengthCompare;
+    ```
+3. 通过指针调用函数
+- 指向函数的指针可用于调用它所指向的函数。可以不需要使用解引用操作符，直接通过指针调用函数。
+    ```c++
+    cmpFcn pf = lengthCompare;
+    lengthCompare("hi", "bye"); // direct call
+    pf("hi", "bye");    // equivalent call: pf1 implicitly dereferenced
+    (*pf)("hi", "bye");    // equivalent call: pf1 implicitly dereferenced
+    ```
+
+4. 函数指针形参
+    ```c++
+    void useBigger(const string &, const string &, bool (const string &, const string &));
+    void useBigger(const string &, const string &, bool (*)(const string &, const string &));
+    ```
+
+5. 返回指向函数的指针
+    ```c++
+    int (*ff(int)) (int*, int); // 将ff声明为一个函数，它带有一个int型的形参
+                                // 该ff函数返回int (*)(int*, int)
+
+    // 等效于
+    typedef int (*PF)(int*, int);
+    PF ff(int);
+    ```
+    - 具有函数类型的形参所对应的实参将被自动转换为指向相应函数类型的指针
+        ```c++
+        // func为函数类型，不是指向函数的指针
+        typedef int func(int*, int);
+        void f1(func);  // oK: f1 has a parameter of function type
+        func f2(int);   // error: f2 has a return type of funciton type
+        func *f3(int);  // ok: f3 returns a pointer to funciton type
+            // 等效于
+            func (*f3)(int);
+        ```
+6. 指向重载函数的指针
+    - c++语言允许使用函数指针指向重载的函数
+    ```c++
+    extern void ff(vector<double>);
+    extern void ff(unsigned int);
+
+    void (*pf1)(unsinged int) = &ff;    // 指向ff(unsinged)
+    ```
 
 ## 第八章 标准IO库
+- istream输入流类型
+- ostream输出流类型
+- cin
+- cout 
+- cerr
+- `>>`
+- `<<`
+- getline函数，需要分别取istream类型和string类型的两个引用形参，其功能是从istream对象读取一个单词，然后写入string对象中
+
+### 8.1 面向对象的标准库
+2. IO对象不可复制或赋值
+
+### 8.2 条件状态
+
+### 8.3 输出缓冲区的管理
+
+### 8.4 文件的输入和输出
+
+### 8.5 字符串流
+
+
+
+# 第二部分 容器和算法
+## 第九章 顺序容器
+1. 顺序容器
+    - vector    支持快速随机访问
+    - list  支持快速插入/删除
+    - deque 双端队列
+2. 顺序容器适配器
+    - stack 后进先出（LIFO）栈
+    - queue 先进先出（FIFO）队列
+    - priority_queue    有优先级管理的队列
+### 9.1 顺序容器的定义
+```c++
+// 为了定义一个容器类型的对象，必须先包含相关的头文件
+#include <vector>
+#include <list>
+#include <deque>
+// 所有的容器都是类模板。要定义某种特殊的容器，必须在容器后加一对尖括号，尖括号里面提供容器中存放的元素类型
+vector<string> svec;    // empty vector that can hold strings
+list<int> ilist;    // empty list that can hold ints
+deque<Sales_item> items;    // empty deque that holds Sales_items
+```
+1. 容器元素的初始化
+    ```c++
+    // 容器构造函数
+    C<T> c; // C为容器类型名；T为元素类型；c为容器名
+    C c(c2);    // 创建容器c2的副本
+    C c(begin, end);  // 创建c，其元素是迭代器b和e标示的范围内元素的副本
+    C c(n, t);  // 用n个值为t的元素创建容器c，其中值t必须是容器类型C的元素类型的值，或者是可转换为该类型的值
+                //只适用于顺序容器
+    C c(n);     // 创建有n个值初始化元素的容器c
+                //只适用于顺序容器
+    ```
+
+### 9.2 迭代器和迭代器范围
+```c++
+//常用迭代器运算
+*iter   // 返回迭代器iter所指向元素的引用
+iter->mem   // 对iter进行解引用，获取指定元素中名为mem的成员。等效于(*iter).mem
+++iter  // iter加1，并指向下一个元素
+iter++
+--iter  // iter减1，并指向前一个元素
+iter--
+iter1 == iter2  // 比较两个迭代器是否相等
+iter1 != iter2
+```
+
+- vector和deque容器的迭代器提供额外的运算
+    ```c++
+    iter + n    // 指向前面第n个元素的迭代器
+    iter - n
+    iter1 += iter2  // 迭代器加减法的复合赋值运算
+    iter1 -= iter2
+    iter1 - iter2   // 
+    >, >=, <, <=
+
+    // 计算vector对象的中点位置
+    vector<int>::iterator iter = vec.begin() + vec.size()/2;
+    ```
+
+1. 迭代器范围
+    - first和last，或者beg和end
+    - 左闭合区间 [first, last)
+    - 当first与last相等时，迭代器范围为空
+    - `first == last`，可作为退出循环
+    ```c++
+    while (first != last)
+    {
+        ++first;
+    }
+    ```
+
+### 9.3 顺序容器的操作
+2. begin和end成员
+    ```c++
+    c.begin()   // 返回一个迭代器，指向容器c的第一个元素
+    c.end()     // 返回一个迭代器，指向容器c的最后一个元素的下一个位置
+    c.rbegin()  // 返回一个逆序迭代器，指向容器c的最后一个元素
+    c.rend()    // 返回一个逆序迭代器，指向容器c的第一个元素前面的位置
+    ```
+
+3. 在顺序容器中添加元素
+    - 容器元素都是副本
+    - 所有顺序容器都支持push_back操作，可在容器尾插入一个元素
+    ```c++
+    string text_word;
+    while (cin >> text_word)
+        container.push_back(text_word); // container类型可以是list、vector、deque
+    ```
+    ```c++
+    // 在顺序容器中添加元素的操作
+    c.push_back(t)
+    c.push_front(t) // 只适用于list和deque容器类型
+
+    c.insert(p, t)      // 在迭代器p所指向的元素前面插入值为t的新元素。返回指向新元素的迭代器
+    c.insert(p, n, t)   // 在迭代器p所指向的元素前面插入n个值为t的新元素
+    c.insert(p, b, e)   // 在迭代器p所指向的元素前面插入由迭代器b和e标记的范围内的元素
+    ```
+    - 为避免存储end操作返回的迭代器，可在每次做完插入运算后重新计算end迭代器值
+4. 关系操作符
+    - 比较的容器必须具有相同的容器类型，而且其元素类型也必须相同
+5. 容器大小的操作
+    ```c++
+    c.size()    // 返回元素个数
+    c.max_size()    // 返回可容纳的最多元素个数
+    c.empty()   // 返回标记容器大小是否为0的布尔值
+    c.resize(n) // 调整容器长度大小，使其能容纳n个元素
+    c.resize(n, t)  // 调整容器长度大小，使其能容纳n个元素，所有新添加的元素值都为t
+    ```
+6. 访问元素
+    ```c++
+    c.back()    // 返回容器c的最后一个元素的引用
+    c.front()   // 返回容器c的第一个元素的引用
+    c[n]        // 返回下标为n的元素的引用，只适用于vector和deque容器
+    c.at[n]     // 返回下标为n的元素的引用，只适用于vector和deque容器
+    ```
+7. 删除元素
+    ```c++
+    // 删除顺序容器内元素的操作
+    c.erase(p)  // 删除p所指向元素
+                // 返回一个迭代器，指向被删除元素后面的元素
+    c.erase(b, e)   // 删除迭代器b和e所标记的范围内所有的元素
+    c.clear()       // 删除所有元素
+    c.pop_back()    // 删除最后一个元素
+    c.pop_front()   // 删除第一个元素
+        // 只适用于list或deque容器
+    ```
+8. 赋值与swap
+    ```c++
+    c1 = c2         // 产出容器c1的所有元素，然后将c2的元素复制给c1
+    c1.swap(c2)     // 交换内容；二者类型必须想相同
+    c.assign(b, e)  // 重新设置c的元素；将迭代器b和e标记的范围内所有的元素复制到c中
+    c.assign(n, t)  // 将容器c重新设置为储存n个值为t的元素
+    ```
+
+### 9.4 vector容器的自增长
+- 一般而言，使用list容器优于vector容器。
+- 对于大部分应用，使用vector容器是最好的。
+    ```c++
+    vector<int> ivec;
+    ivec.capacity();    // 输出为 ivec: size: 24 capacity:32
+
+    ivec.reserve(50);   // 设置容量
+    ```
+
+### 9.5 容器的选用
+1. 插入操作如何影响容器的选择
+    - list表示不连续的内存区域，不支持随机访问
+    - vector，除首尾外，其它任何位置插入或删除元素都需要移动其右边的元素
+    - deque拥有更复杂的元素，两端插入删除较快，但是中间元素的操作很复杂
+2. 元素的访问如何影响容器的选择
+    - vector和deque都支持对元素实现高效的随机访问
+    - list只能逐个遍历
+3. 选择容器的提示
+    - 如果程序要求随机访问元素，则应使用vector或deque容器
+    - 如果程序必须在中间插入或删除元素，则应采用list容器
+    - 如果程序不是在容器的中间位置，而是在容器首部或尾部插入或删除元素，则应采用deque容器
+    - 如果只需在读取输入时在容器中位置插入元素，然后需要随机访问元素，则可考虑在输入时将元素读入到一个list容器，接着对此容器重新排序，最后复制到一个vector容器
+
+### 9.6 再谈string类型
+```c++
+string s;   // 新建空string
+string s(cp);   // 定义一个新string，用cp所指向的字符串来初始化该对象
+string s(s2);   // 定义一个新string对象，并将它初始化为s2的副本
+is >> s;        // 从输入流is中读取一个以空白字符分隔符的字符串，写入s
+os << s;        // 将s写道输出流os中
+getline(is, s)  // 从输入流is中读取一行字符，写入s
+s1 + s2         // 把s1和s2串接起来，产生一个新的string对象
+s1 += s2        // 把s2拼接到s1后面
+关系操作符      // == != < <= > >=
+```
+
+1. 构造string对象的其它方法
+    ```c++
+    string s(cp, n)
+    string s(s2, pos2)          // 从pos2开始的元素
+    string s(s2, pos2, len2)    // 从pos2开始的len2个元素
+    ```
+2. 修改string对象的其它方法
+    ```c++
+    s.insert(p, t)      // p之前插入一个值为t的新元素
+    s.insert(p, n, t)
+    s.insert(p, b, e)
+
+    s.assign(b, e)      // 用b, e之间的元素替换s
+    s.assign(n, t)
+
+    s.erase(p)
+    s.arase(b, e)
+
+    // string类型特有的版本
+    s.insert(pos, n, c)
+    s.insert(pos, s2)
+    s.insert(pos, s2, pos2, len)
+    s.insert(pos, cp, len)
+    s.insert(pos, cp)
+
+    s.assign(s2)
+    s.assign(s2, pos2, len)
+    s.assign(cp, len)
+    s.assign(cp)
+
+    s.erase(pos, len)
+    ```
+3. 只适用于string类型的操作
+    ```c++
+    s.substr(pos, n)
+    s.substr(pos)
+    s.substr()
+
+    s.append(args)
+    s.replace(pos, len, args)
+    s.replace(b, e, args)
+
+    // append和replace操作的参数：args
+    s2
+    s2, pos2, len2
+    cp              // 该指针指向以空字符结束的数组
+    cp, len2
+    n, c
+    b2, e2
+    ```
+4. string类型的查找操作
+    ```c++
+    s.find(args)
+    s.rfind(args)       // 最后一次出现
+    s.find_first_of(args)
+    s.find_last_of(args)
+    s.find_first_not_of(args)
+    s.find_last_not_of(args)
+
+    // find操作的参数
+    c, pos  // 查找字符c
+    s2, pos // 查找对象s2
+    cp, pos // cp为空字符
+    cp, pos, n
+    ```
+5. string对象的比较
+    ```c++
+    s.comapre(s2)
+    s.comapre(pos1, n1, s2) // 将2中从pos下标位置开始的n1个字符与s2做比较
+    s.comapre(pos1,n1, s2, pos2, n2)
+    s.comapre(cp)       // cp为空字符
+    s.comapre(pos1, n1, cp)
+    s.comapre(pos1, n1, cp, n2)
+    ```
+
+### 9.7 容器适配器
+```c++
+// 容器适配器通用的操作和类型
+size_type   // 一种类型，足以储存此适配器类型最大对象的长度
+value_type  // 元素类型
+container_type // 基础容器的类型
+A a;        // 创建一个新的空适配器
+A a(c);
+关系操作符  // == != < <= > >=
+
+// 使用适配器时，必须包含相关的头文件
+#include <stack>
+#include <queue>
+```
+- 适配器的初始化
+    ```c++
+    stack<int> stk(deq) // 假如deq是deque<int>类型的容器
+    ```
+- 覆盖基础容器类型
+    ```c++
+    stack< string, vector<string> > str_stk;    // 基于vector的空stack
+    stack< string, vector<string> > str_stk2(svec); // 复制svec
+    ```
+1. 栈适配器
+    ```c++
+    s.empty()   // 若为空则返回true
+    s.size()
+    s.pop()     // 删除栈顶元素，但不返回其值
+    s.top()     // 返回栈顶元素的值，但不删除该元素
+    s.push(item)
+    ```
+2. 队列和优先级队列
+    ```c++
+    q.empty()   // 若为空则返回true
+    q.size()
+    q.pop()
+    q.front()   // 只适用于队列
+    q.back()    // 只适用于队列
+    q.top()     // 只适用于优先级队列
+    q.push(item)
+    ```
+
+## 第十章 关联容器
+
+## 第十一章 泛型算法

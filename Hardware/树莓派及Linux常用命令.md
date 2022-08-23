@@ -236,7 +236,10 @@ FAT 格式 U 盘 mount 本身就能支持，但如果你的 U 盘或移动硬盘
 
 16. 安装Mosquitto (MQTT)
 - 安装软件
-
+    ```
+    sudo apt install -y mosquitto
+    sudo apt install mosquitto-clients
+    ```
 - 开启自启动
     ```
     sudo systemctl enable mosquitto.service
@@ -246,6 +249,14 @@ FAT 格式 U 盘 mount 本身就能支持，但如果你的 U 盘或移动硬盘
     mosquitto -v
     ```
 - 注意：如果提示Error: Address already in use.说明已成功启用
+- 订阅消息
+    ```
+    mosquitto_sub -t 'test' -d
+    ```
+- 发布消息
+    ```
+    mosquitto_pub -d -t test -m 'Hello world'
+    ```
 - 查看树莓派IP地址
     ```
     hostname -I
