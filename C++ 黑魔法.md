@@ -17,6 +17,11 @@ cout << k << '\n';  // value might be anything
 
 2. 函数声明在前，使用在后
 
+3. 比较输入参数是否是特定字符串
+```c++
+std::string(argv[5]) == "true"
+```
+
 
 ## 推荐使用
 1. 如果变量初始化后不需要修改时，可以添加`const`，防止被修改
