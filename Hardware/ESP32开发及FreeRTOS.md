@@ -10,7 +10,7 @@ Date: Oct 2, 2020
     idf.py menuconfig
     ```
 
-- 安装CP2102的驱动，以便电脑可以识别ESP32开发板
+- 安装[CP2102的驱动](https://www.silabs.com/developers/usb-to-uart-bridge-vcp-drivers?tab=downloads)，以便电脑可以识别ESP32开发板
 
 - Generating x509_crt_bundle错误解决
 
@@ -37,6 +37,8 @@ Date: Oct 2, 2020
 idf.py build
 ```
 **3. 烧录到设备**
+
+烧录时需要按住Boot键
 ```cmd
 idf.py -p COM3 flash
 ```
