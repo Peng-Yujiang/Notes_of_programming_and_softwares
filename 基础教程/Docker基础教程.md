@@ -286,6 +286,23 @@ wsl.exe --install <Distro>  # 进行安装。
     sudo docker system prune --volumes      # 删除包括卷在内的所有未使用资源（镜像、容器、网络、卷）
     ```
 
+5. 复制文件
+
+    ```bash
+    docker cp /media/pyj/FileBackup/软件安装包/MDK536.EXE frosty_antonelli:/root/home
+    docker cp ${HOME}/android-ndk-r26c frosty_antonelli:/root/home
+    ```
+
+6. 图形界面运行
+
+    ```bash
+    xhost +local:docker  # 允许 Docker 容器访问主机的 X 服务器
+    docker run -d -it \
+        --env DISPLAY=$DISPLAY \
+        --volume /tmp/.X11-unix:/tmp/.X11-unix \
+        sys-algo-ubuntu:wine
+    ```
+
 ## 3. 私有registry
 
 1. 创建private registry
@@ -344,7 +361,8 @@ wsl.exe --install <Distro>  # 进行安装。
             libgl1-mesa-dev \
             libglu1-mesa-dev \
             freeglut3-dev \
-            mesa-common-dev && \
+            mesa-common-dev \
+            libgoogle-glog-dev && \
         
         # 安装最新版本 cmake
         wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor -o /usr/share/keyrings/kitware-archive-keyring.gpg && \
@@ -355,12 +373,28 @@ wsl.exe --install <Distro>  # 进行安装。
         # 安装JForg
         curl -fL https://getcli.jfrog.io | sh && \
         mv jfrog /usr/local/bin/ && \
+
+        # 安装wine
+        dpkg --add-architecture i386 && \
+        apt update && \
+        wget -qO- https://dl.winehq.org/wine-builds/winehq.key | sudo apt-key add - && \
+        apt install software-properties-common && \
+        apt-add-repository "deb http://dl.winehq.org/wine-builds/ubuntu/ $(lsb_release -cs) main" && \
+        apt install --install-recommends winehq-stable && \
+        wine --version && \
         
         # 清理 APT 缓存以减小镜像体积
         rm -rf /var/lib/apt/lists/*
 
-    # 设置工作目录
-    WORKDIR /root/home
+    ## 设置工作目录
+    #WORKDIR /root/home
+
+    # 创建一个非 root 用户
+    RUN useradd -m user && echo "user:user" | chpasswd && adduser user sudo
+
+    # 切换到非 root 用户
+    USER user
+    WORKDIR /home/user
 
     # 默认启动 bash
     CMD ["bash"]
