@@ -64,7 +64,8 @@ cd ~/esp/esp-idf
     ```
 - 在exit0前输入
     ```
-    python3 /home/pi/.autostart/pyj_pistatus.py &
+    python3 /home/pi-pyj/.autostart/pyj_fun.py &
+    python3 /home/pi-pyj/.autostart/pyj_pistatus.py &
     ```
 5. 创建两个附加总线 nl总线3和4
     - 打开cli并运行

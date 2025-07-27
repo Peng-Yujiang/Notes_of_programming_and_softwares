@@ -3,6 +3,8 @@ Author: Yujiang Peng
 Date: March 10, 2021
 
 
+<img src="img/树莓派5引脚图.png" width="100%">
+
 ## 1. 导入模块
 ```python
 import RPi.GPIO as GPIO
